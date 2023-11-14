@@ -115,7 +115,7 @@ load()
 save()
 
 # Define the main command for the application
-@app.command()
+@app.command(help="Main command for the application.")
 def main(
     version: Optional[bool] = typer.Option(
         None,
@@ -129,7 +129,7 @@ def main(
     return True
 
 # Define the 'add' command to create a new wish
-@app.command(name="add")
+@app.command(name="add", help="Add a new wish to the wish list.", no_args_is_help=True)
 def add(name: str, category: str):
     if get_wish(name) is not None:
         print(f"\n\n🛑 Sorry, but wish '{name}' already exists in your wish list! 😔\n\n")
@@ -141,7 +141,7 @@ def add(name: str, category: str):
     print(f"\n✨ Wish '{name}' in category '{category}' added successfully! 🌟\n")
 
 # Define the 'list' command for displaying the wish list
-@app.command(name="list")
+@app.command(name="list", help="Display the wish list.")
 def list_(
     alpha: Optional[bool] = typer.Option(
         True,
