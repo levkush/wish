@@ -85,6 +85,31 @@ def sort_category(key, categories):
 def sort_completed(key, categories):
     return int(key)
 
+# Function to get wishes
+def get_wish(name: str):
+    rows = get_rows()
+    finds = []
+    name = name.lower()
+
+    for row in rows:
+        row = row[0].lower()
+
+        if name in row:
+            finds.append(row)
+    
+    if len(finds) == 0:
+        return None
+    
+    if len(finds) == 1:
+        return name
+    
+    if len(finds) > 1:
+        for find in finds:
+            if find == name:
+                return find
+    
+    return finds[0]
+
 # Load and save wishlist data
 load()
 save()
@@ -102,6 +127,18 @@ def main(
 ):
     print(version)
     return True
+
+# Define the 'add' command to create a new wish
+@app.command(name="add")
+def add(name: str, category: str):
+    if get_wish(name) is not None:
+        print(f"\n\n🛑 Sorry, but wish '{name}' already exists in your wish list! 😔\n\n")
+
+        return
+
+    table.add_row(name, category, "False")
+    save()
+    print(f"\n✨ Wish '{name}' in category '{category}' added successfully! 🌟\n")
 
 # Define the 'list' command for displaying the wish list
 @app.command(name="list")
@@ -174,9 +211,9 @@ def list_(
         sorted_table.add_row(" ".join(row), difficulty, status)
 
     # Display the sorted table
-    print("")
+    print("\n")
     console.print(sorted_table)
-    print("")
+    print("\n")
 
 # Run the Typer app if the script is executed
 if __name__ == "__main__":
