@@ -154,7 +154,7 @@ def add(name: str, category: str):
     save()
     print(f"\n✨ Wish '{name}' in category '{category}' added successfully! 🌟\n")
 
-# Define the 'delete' command to create a new wish
+# Define the 'delete' command to delete a wish
 @app.command(name="delete", help="Delete a wish from the wish list.", no_args_is_help=True)
 def delete(name: str):
     name = name.capitalize()
