@@ -29,7 +29,7 @@ table = Table(
 # Define metadata for the application
 __app_name__ = "Wish"
 __version__ = "0.0.1"
-__save__ = "./wishlist"  # Path.home() / "wish" / "wishlist"
+__save__ = Path.home() / "wish" / "wishlist"
 
 # Ensure that the directory for saving wishlist files exists
 os.makedirs(Path.home() / "wish", exist_ok=True)
