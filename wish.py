@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import random
 from typing import Optional
 from rich.console import Console
@@ -6,6 +8,7 @@ from rich.table import Column, Table
 from rich.theme import Theme
 from pathlib import Path
 import os
+from typing_extensions import Annotated
 
 # Define a color scheme for the console
 color_scheme = Theme({
@@ -25,7 +28,6 @@ table = Table(
     title="My Wish List",
 )
 
-
 # Define metadata for the application
 __app_name__ = "Wish"
 __version__ = "0.0.1"
@@ -44,31 +46,45 @@ def get_rows():
         vertical.append([str(cell) for cell in row.cells])
 
     out = []
-
-    for count in range(len(vertical[0])):
-        out.append([vertical[row][count] for row in range(len(rows))])
+    
+    try:
+        for count in range(len(vertical[0])):
+            out.append([vertical[row][count] for row in range(len(rows))])
+    except Exception:
+        return []
 
     return out
 
 # Function to load wishlist data from a file
 def load():
-    with open(__save__) as f:
-        lines = f.readlines()
+    try:
+        with open(__save__) as f:
+            lines = f.readlines()
+    except Exception:
+        with open(__save__, "w") as f:
+            pass
+
+        with open(__save__) as f:
+            lines = f.readlines()
 
     for line in lines:
         try:
             line = line.replace("\n", "").split(" ")
 
-            difficulty = line.pop(-2)
-            status = line.pop(-1)
+            category = line.pop(-2)
+            completed = line.pop(-1)
+
             wish = " ".join(word for word in line)
 
-            table.add_row(wish, difficulty, status)
+            if completed != "True" and completed != "False":
+                completed = "False"
+
+            table.add_row(wish, category, completed)
         except Exception:
             continue
 
 # Function to save wishlist data to a file
-def save(ignore = None):
+def save(ignore: list = None, edit: list = None):
     if ignore is None:
         ignore = []
 
@@ -76,6 +92,10 @@ def save(ignore = None):
         for row in get_rows():
             if row[0] in ignore:
                 continue
+
+            if edit is not None:
+                if row[0] == edit[0]:
+                    row[edit[1]] = edit[2]
 
             f.write(" ".join(row) + "\n")
 
@@ -89,7 +109,7 @@ def sort_category(key, categories):
 
     return 1
 
-# Function to determine the sorting key for completion status
+# Function to determine the sorting key for completion completed
 def sort_completed(key, categories):
     return int(key)
 
@@ -101,7 +121,6 @@ def get_wish(name: str):
 
     for row in rows:
         row = row[0]
-        print(row)
 
         if name in row.lower():
             finds.append(row)
@@ -171,6 +190,48 @@ def delete(name: str):
 
     prefix = random_prefix(["[bold #FF6B66]Throw away![/bold #FF6B66]", "[bold #FF6B66]Flaming hot![/bold #FF6B66]", "[bold #FF6B66]Into the bin![/bold #FF6B66]", "[bold #FF6B66]It belongs there![/bold #FF6B66]"])
     console.print(f"\n🗑  {prefix} Wish [#66C2FF]'{target}'[/#66C2FF] deleted successfully! 🔥\n")
+
+# Define the 'delete' command to delete a wish
+@app.command(name="set", help="Assign wish property to a value.", no_args_is_help=True)
+def set_(
+    name: Annotated[str, typer.Argument(help="The name of the wish to edit")], 
+    property: Annotated[str, typer.Argument(help="The edit property. Properties: category, completed, name.")], 
+    value: Annotated[str, typer.Argument(help="The edit value. Values: <name>, <category>, yes, no.")]
+):
+    name = name.capitalize()
+    target = get_wish(name)
+    value = value.capitalize()
+
+    property = property.lower()
+
+    if target is None:
+        prefix = random_prefix(["[bold #FF6B66]Can't find it![/bold #FF6B66]", "[bold #FF6B66]Where is it?[/bold #FF6B66]", "[bold #FF6B66]Lost forever![/bold #FF6B66]", "[bold #FF6B66]It's gone![/bold #FF6B66]"])
+        console.print(f"\n🛑 {prefix} Wish [#66C2FF]'{name}'[/#66C2FF] is not in your wish list! 😔\n")
+
+        return
+
+    if property == "completed":
+        if value == "Yes":
+            value = 'True'
+
+        elif value == "No":
+            value = 'False'
+
+        if value != "True" and value != "False":
+            value = "False"
+
+        save(edit=[target, 2, value])
+    elif property == "name":
+        save(edit=[target, 0, value])
+    elif property == "category":
+        save(edit=[target, 1, value.capitalize()])
+    else:
+        prefix = random_prefix(["[bold #FF6B66]Can't find it![/bold #FF6B66]", "[bold #FF6B66]Where is it?[/bold #FF6B66]", "[bold #FF6B66]Lost forever![/bold #FF6B66]", "[bold #FF6B66]It's gone![/bold #FF6B66]"])
+        console.print(f"\n🛑 {prefix} Property [#66C2FF]'{property}'[/#66C2FF] doesn't exist! 😔\n")
+    load()
+
+    prefix = random_prefix(["[bold #06D6A0]Edit Successful![/bold #06D6A0]", "[bold #06D6A0]Good as new![/bold #06D6A0]", "[bold #06D6A0]Changes![/bold #06D6A0]", "[bold #06D6A0]Misspelled?[/bold #06D6A0]"])
+    console.print(f"\n📝 {prefix} Wish [#66C2FF]'{target}'[/#66C2FF] property [#66C2FF]'{property}'[/#66C2FF] set to [#66C2FF]'{value}'[/#66C2FF] successfully! 🖊️\n")
 
 # Define the 'list' command for displaying the wish list
 @app.command(name="list", help="Display the wish list.")
