@@ -141,23 +141,23 @@ def get_wish(name: str):
 def random_prefix(prefix_list):
     return random.choice(prefix_list)
 
+def version_callback(value: bool):
+    if value:
+        console.print(f"\n👋 Hi, I am [#66C2FF bold]wish v{__version__}[/#66C2FF bold] created by [bold #66C2FF]levkush[/bold #66C2FF].\n\n🪄  I am a program that will make your wish list! 🔮\n")
+        raise typer.Exit()
+
 # Load and save wishlist data
 load()
 save()
 
 # Define the main command for the application
-@app.command(help="Main command for the application.")
+@app.callback()
 def main(
-    version: Optional[bool] = typer.Option(
-        None,
-        "--version",
-        "-v",
-        help="Show the application's version and exit.",
-        is_eager=True
-    )
+    version: Annotated[
+        Optional[bool], typer.Option("--version", "-v", callback=version_callback)
+    ] = None,
 ):
     print(version)
-    return True
 
 # Define the 'add' command to create a new wish
 @app.command(name="add", help="Add a new wish to the wish list.", no_args_is_help=True)
@@ -191,7 +191,7 @@ def delete(name: str):
     prefix = random_prefix(["[bold #FF6B66]Throw away![/bold #FF6B66]", "[bold #FF6B66]Flaming hot![/bold #FF6B66]", "[bold #FF6B66]Into the bin![/bold #FF6B66]", "[bold #FF6B66]It belongs there![/bold #FF6B66]"])
     console.print(f"\n🗑  {prefix} Wish [#66C2FF]'{target}'[/#66C2FF] deleted successfully! 🔥\n")
 
-# Define the 'delete' command to delete a wish
+# Define the 'set' command to assign wish property to a value.
 @app.command(name="set", help="Assign wish property to a value.", no_args_is_help=True)
 def set_(
     name: Annotated[str, typer.Argument(help="The name of the wish to edit")], 
